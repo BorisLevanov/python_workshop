@@ -1,3 +1,4 @@
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.wait import WebDriverWait
 from config import BASE_URL, CLIENT
 
@@ -16,14 +17,41 @@ class Page(object):
                 BASE_URL,
                 self.BASE_PATH.format(**url_args)
             )
-            import ipdb
-            ipdb.set_trace()
             self.driver.get(self.url)
 
+        self.wait_for_load_spinners()
+        self.wait_until_loaded()
+
+    def wait_until_loaded(self):
+        raise NotImplementedError()
+
     def get_page_title(self):
-        title_css_path = self.driver.find_element_by_css_selector(
-            'h1[class*="Header"]')
+        title_css_path = self.driver.find_element_by_css_selector('h1[class*="Header"]')
         return title_css_path.text
+
+    @property
+    def expand_filter_panel_button(self):
+        return self.driver.find_element_by_css_selector('.Sidebar__icon--3GhESI')
+
+    @property
+    def collapse_filter_panel_button(self):
+        return self.driver.find_element_by_css_selector('.MyFilters__close--17xB9g')
+
+    @property
+    def loading_spinners(self):
+        return self.driver.find_elements_by_css_selector('[class*="AppLoad"]')
+
+    @property
+    def score_badge_loading_spinners(self):
+        return self.driver.find_elements_by_css_selector('[class*="appLoad"]')
+
+    def wait_for_load_spinners(self):
+        try:
+            WebDriverWait(self.driver, 10).until(
+                lambda _: len(self.loading_spinners) == 0
+            )
+        except TimeoutException:
+            pass
 
 
 class FTBPage(Page):
@@ -31,15 +59,16 @@ class FTBPage(Page):
 
     def wait_until_loaded(self):
         WebDriverWait(self.driver, 10).until(
-            lambda _: len(self.get_page_title) > 0
+            lambda _: self.sku_counter.is_displayed()
         )
 
     @property
     def page_title(self):
         return self.get_page_title()
 
+    @property
     def sku_counter(self):
-        pass
+        return self.driver.find_element_by_css_selector('[class*="ReportFilter__report"]')
 
 
 class LoginPage(Page):
@@ -48,6 +77,10 @@ class LoginPage(Page):
         WebDriverWait(self.driver, 5).until(
             lambda _: self.welcomebtn.is_displayed()
         )
+
+    @property
+    def score_badge_loading_spinners(self):
+        return self.driver.find_elements_by_css_selector('[class*="appLoad"]')
 
     @property
     def welcomebtn(self):
@@ -83,3 +116,7 @@ class LoginPage(Page):
 
         self.passwordtxt.send_keys(password)
         self.loginbtn.click()
+
+        WebDriverWait(self.driver, 5).until(
+            lambda _: len(self.score_badge_loading_spinners) > 0
+        )
