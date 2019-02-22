@@ -1,4 +1,3 @@
-
 from pages import LoginPage, FTBPage
 from config import PASSWORD
 
