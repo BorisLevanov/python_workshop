@@ -1,9 +1,12 @@
 from selenium.webdriver.support.wait import WebDriverWait
-from config import BASE_URL
+from config import BASE_URL, CLIENT
 
 
 class Page(object):
     """Model of generic page"""
+
+    # overridden when set in subclass
+    BASE_PATH = None
 
     def __init__(self, driver, force_load=False, **url_args):
         self.driver = driver
@@ -13,6 +16,8 @@ class Page(object):
                 BASE_URL,
                 self.BASE_PATH.format(**url_args)
             )
+            import ipdb
+            ipdb.set_trace()
             self.driver.get(self.url)
 
     def get_page_title(self):
@@ -26,7 +31,7 @@ class FTBPage(Page):
 
     def wait_until_loaded(self):
         WebDriverWait(self.driver, 10).until(
-            lambda _: len(self.panels) > 0
+            lambda _: len(self.get_page_title) > 0
         )
 
     @property
@@ -38,6 +43,7 @@ class FTBPage(Page):
 
 
 class LoginPage(Page):
+
     def wait_until_loaded(self):
         WebDriverWait(self.driver, 5).until(
             lambda _: self.welcomebtn.is_displayed()
@@ -60,7 +66,7 @@ class LoginPage(Page):
         return self.driver.find_element_by_css_selector("input[value='Login'")
 
     def enter_details(self, password):
-        client = 'edgewell'
+        client = CLIENT
         self.welcomebtn.click()
         WebDriverWait(self.driver, 20).until(
             lambda _: self.loginbtn.is_displayed()
