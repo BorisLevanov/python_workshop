@@ -10,5 +10,5 @@ def test_ftb(browser):
     login_page.enter_details(PASSWORD)
     ftb_page = FTBPage(browser, force_load=True)
 
-    # assert the presence of SKU counter
+    # Introduce additional checks here
     print(ftb_page.page_title)
